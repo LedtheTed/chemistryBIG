@@ -46,8 +46,8 @@ function drawBackground() {
 
 // Resize canvas to fit container as a square
 function resizeCanvas() {
-  canvas.width = 500;
-  canvas.height = 500;
+  canvas.width = 600;
+  canvas.height = 600;
 }
 resizeCanvas();
 window.addEventListener('resize', resizeCanvas);
@@ -92,79 +92,6 @@ function pushNearbyElements(clickX, clickY) {
     // add velocity (impulse)
     e.vx += nx * impulse;
     e.vy += ny * impulse;
-  }
-}
-
-// Particle class for click effects
-class Particle {
-  constructor(x, y) {
-    this.x = x;
-    this.y = y;
-    this.vx = (Math.random() - 0.5) * 4;
-    this.vy = (Math.random() - 0.5) * 4;
-    this.life = 1.0;
-    this.size = 3;
-    this.color = `hsl(${Math.random() * 60 + 180}, 100%, 50%)`;
-  }
-
-  update() {
-    this.x += this.vx;
-    this.y += this.vy;
-    this.vy += 0.1; // gravity
-    this.life -= 0.02;
-  }
-
-  draw(ctx) {
-    ctx.fillStyle = this.color;
-    ctx.globalAlpha = this.life;
-    ctx.beginPath();
-    ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.globalAlpha = 1.0;
-  }
-}
-
-// ElementBase class
-class ElementBase {
-  constructor(options = {}) {
-    this.name = options.name || 'H';
-    this.x = options.x || 0;
-    this.y = options.y || 0;
-    this.color = options.color || '#000';
-    this.size = options.size || 10;
-    this.speed = options.speed || 1;
-    this.vx = (Math.random() - 0.5) * this.speed;
-    this.vy = (Math.random() - 0.5) * this.speed;
-  }
-
-  update() {
-    // update position
-    this.x += this.vx;
-    this.y += this.vy;
-
-    // bounce off walls
-    if (this.x - this.size < 0 || this.x + this.size > canvas.width) {
-      this.vx *= -1;
-      this.x = Math.max(this.size, Math.min(canvas.width - this.size, this.x));
-    }
-    if (this.y - this.size < 0 || this.y + this.size > canvas.height) {
-      this.vy *= -1;
-      this.y = Math.max(this.size, Math.min(canvas.height - this.size, this.y));
-    }
-  }
-
-  draw(ctx) {
-    ctx.fillStyle = this.color;
-    ctx.beginPath();
-    ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
-    ctx.fill();
-
-    // draw label
-    ctx.fillStyle = '#000';
-    ctx.font = 'bold 10px Arial';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText(this.name, this.x, this.y);
   }
 }
 
@@ -328,7 +255,14 @@ function checkDecays() {
 
 // Canvas click handler to create hydrogen (10% chance) and particle effect
 canvas.addEventListener('click', (event) => {
+
   const rect = canvas.getBoundingClientRect();
+
+  debug(`Rect left: ${rect.left}`);
+  debug(`Rect top: ${rect.top}`);
+  debug(`Mouse X: ${event.clientX}`);
+  debug(`Mouse Y: ${event.clientY}`);
+
   const x = event.clientX - rect.left;
   const y = event.clientY - rect.top;
 
@@ -439,7 +373,7 @@ let Game = {
       particle.draw(ctx);
     });
 
-    debug(`Frame ${Game.frame}: Loaded in ${Game.deltaTime} ms`);
+    // debug(`Frame ${Game.frame}: Loaded in ${Game.deltaTime} ms`);
   },
 
   shouldRenderFrame: () => {
