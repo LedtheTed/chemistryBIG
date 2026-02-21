@@ -1,45 +1,59 @@
-document.addEventListener('DOMContentLoaded', () => {
-  const sim = document.getElementById('sim-area');
-  if (!sim) return;
+import { drawCanvas } from "./render.js";
 
-  const particles = [];
+let canvas = document.getElementById("sim-canvas");
+const ctx = canvas.getContext("2d");
+console.log(ctx);
 
-  function _clientToLocal(clientX, clientY) {
-    const rect = sim.getBoundingClientRect();
-    return { x: clientX - rect.left, y: clientY - rect.top };
-  }
+while (true) {
+    console.log("Hello");
+    sleep
+}
 
-  function createParticleAt(clientX, clientY, opts = {}) {
-    const { x, y } = _clientToLocal(clientX, clientY);
-    const el = document.createElement('div');
-    el.className = 'particle';
-    if (opts.size === 'small') el.classList.add('small');
-    if (opts.size === 'large') el.classList.add('large');
-    el.style.left = x + 'px';
-    el.style.top = y + 'px';
-    el.dataset.type = opts.type || '';
+/*****
+COMMENTED OUT OLD ATOM CODE - REMOVE IF WANTED
+*****/
+// document.addEventListener('DOMContentLoaded', () => {
+//   const sim = document.getElementById('sim-area');
+//   if (!sim) return;
 
-    sim.appendChild(el);
-    particles.push({ el, x, y, vx: 0, vy: 0 });
+//   const particles = [];
 
-    // simple fade-out after some time (placeholder behaviour)
-    if (opts.lifetime) {
-      setTimeout(() => {
-        el.style.opacity = '0';
-        setTimeout(() => el.remove(), 400);
-      }, opts.lifetime);
-    }
+//   function _clientToLocal(clientX, clientY) {
+//     const rect = sim.getBoundingClientRect();
+//     return { x: clientX - rect.left, y: clientY - rect.top };
+//   }
 
-    return el;
-  }
+//   function createParticleAt(clientX, clientY, opts = {}) {
+//     const { x, y } = _clientToLocal(clientX, clientY);
+//     const el = document.createElement('div');
+//     el.className = 'particle';
+//     if (opts.size === 'small') el.classList.add('small');
+//     if (opts.size === 'large') el.classList.add('large');
+//     el.style.left = x + 'px';
+//     el.style.top = y + 'px';
+//     el.dataset.type = opts.type || '';
 
-  // Click inside sim area spawns a particle at click location
-  sim.addEventListener('click', (ev) => {
-    // Only respond to primary button
-    if (ev.button !== 0) return;
-    createParticleAt(ev.clientX, ev.clientY, { size: 'small' });
-  });
+//     sim.appendChild(el);
+//     particles.push({ el, x, y, vx: 0, vy: 0 });
 
-  // expose helper for console/other scripts
-  window.createParticleAt = createParticleAt;
-});
+//     // simple fade-out after some time (placeholder behaviour)
+//     if (opts.lifetime) {
+//       setTimeout(() => {
+//         el.style.opacity = '0';
+//         setTimeout(() => el.remove(), 400);
+//       }, opts.lifetime);
+//     }
+
+//     return el;
+//   }
+
+//   // Click inside sim area spawns a particle at click location
+//   sim.addEventListener('click', (ev) => {
+//     // Only respond to primary button
+//     if (ev.button !== 0) return;
+//     createParticleAt(ev.clientX, ev.clientY, { size: 'small' });
+//   });
+
+//   // expose helper for console/other scripts
+//   window.createParticleAt = createParticleAt;
+// });

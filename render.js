@@ -1,4 +1,3 @@
-function drawCanvas(canvas) {
-    document.getElementById("sim-canvas");
-
+export function drawCanvas(ctx) {
+    console.log(ctx);
 }
