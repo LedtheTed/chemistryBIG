@@ -4,10 +4,36 @@ let canvas = document.getElementById("sim-canvas");
 const ctx = canvas.getContext("2d");
 console.log(ctx);
 
-while (true) {
-    console.log("Hello");
-    sleep
+let Game = {
+  fps: 60,  // UNUSED - NEXT UPDATE
+
+  /**
+   * contains all updates the website will receive on this loop
+   * NOTE: Put any changes here in subfunctions, lets try and keep update() clean
+   */
+  update: function() {
+    console.log();
+  },
+  /**
+   * causes program to continuously loop, mostly reserved for looping logic and not actual code
+   * NOTE: to be updated to a more robust version based on date/time
+   * @param {*} timestamp 
+   */
+  loop: function(timestamp) {
+    let progress = timestamp - lastRender;
+    
+    Game.update();
+    
+    lastRender = timestamp;
+    window.requestAnimationFrame(Game.loop);
+  }
 }
+
+
+// Begin looping
+let lastRender = 0;
+window.requestAnimationFrame(Game.loop);
+
 
 /*****
 COMMENTED OUT OLD ATOM CODE - REMOVE IF WANTED
