@@ -1,4 +1,7 @@
-import { drawCanvas } from "./render.js";
+// import { Environment } from "./environment.js";
+import { Particle } from "./classes/Particle.js";
+import { ElementBase } from "./classes/ElementBase.js";
+
 
 let canvas = document.getElementById("sim-canvas");
 const ctx = canvas.getContext("2d");
@@ -22,79 +25,6 @@ window.addEventListener('resize', resizeCanvas);
 // Element storage
 let elements = [];
 let particles = [];
-
-// Particle class for click effects
-class Particle {
-  constructor(x, y) {
-    this.x = x;
-    this.y = y;
-    this.vx = (Math.random() - 0.5) * 4;
-    this.vy = (Math.random() - 0.5) * 4;
-    this.life = 1.0;
-    this.size = 3;
-    this.color = `hsl(${Math.random() * 60 + 180}, 100%, 50%)`;
-  }
-
-  update() {
-    this.x += this.vx;
-    this.y += this.vy;
-    this.vy += 0.1; // gravity
-    this.life -= 0.02;
-  }
-
-  draw(ctx) {
-    ctx.fillStyle = this.color;
-    ctx.globalAlpha = this.life;
-    ctx.beginPath();
-    ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.globalAlpha = 1.0;
-  }
-}
-
-// ElementBase class
-class ElementBase {
-  constructor(options = {}) {
-    this.name = options.name || 'H';
-    this.x = options.x || 0;
-    this.y = options.y || 0;
-    this.color = options.color || '#000';
-    this.size = options.size || 10;
-    this.speed = options.speed || 1;
-    this.vx = (Math.random() - 0.5) * this.speed;
-    this.vy = (Math.random() - 0.5) * this.speed;
-  }
-
-  update() {
-    // update position
-    this.x += this.vx;
-    this.y += this.vy;
-
-    // bounce off walls
-    if(this.x - this.size < 0 || this.x + this.size > canvas.width){
-      this.vx *= -1;
-      this.x = Math.max(this.size, Math.min(canvas.width - this.size, this.x));
-    }
-    if(this.y - this.size < 0 || this.y + this.size > canvas.height){
-      this.vy *= -1;
-      this.y = Math.max(this.size, Math.min(canvas.height - this.size, this.y));
-    }
-  }
-
-  draw(ctx){
-    ctx.fillStyle = this.color;
-    ctx.beginPath();
-    ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
-    ctx.fill();
-
-    // draw label
-    ctx.fillStyle = '#000';
-    ctx.font = 'bold 10px Arial';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText(this.name, this.x, this.y);
-  }
-}
 
 // Register ElementBase globally
 window.ChemistryBIG = window.ChemistryBIG || {};
@@ -324,7 +254,7 @@ let Game = {
   update: function() {
     // update elements
     elements.forEach(element => {
-      element.update();
+      element.update(canvas);
     });
     // check collisions between elements
     checkCollisions();
