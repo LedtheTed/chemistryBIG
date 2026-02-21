@@ -11,10 +11,10 @@ let CANVAS_HEIGHT;
 
 // Resize canvas to fit container as a square
 function resizeCanvas() {
-  canvas.width = 500;
-  canvas.height = 500;
-  CANVAS_WIDTH = 500;
-  CANVAS_HEIGHT = 500;
+  canvas.width = 600;
+  canvas.height = 600;
+  CANVAS_WIDTH = 600;
+  CANVAS_HEIGHT = 600;
 }
 resizeCanvas();
 window.addEventListener('resize', resizeCanvas);
