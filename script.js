@@ -54,15 +54,7 @@ window.ChemistryBIG.spendCounter = function (name, amount = 1) {
 // Update the element counter display
 function updateElementCounter() {
   const counterList = document.getElementById("counter-list");
-  const counts = {};
-  for (const environment of environments) {
-    for (const [element, count] of Object.entries(
-      environment.countElements(),
-    )) {
-      counts[element] = (counts[element] || 0) + count;
-    }
-  }
-
+  const counts = window.ChemistryBIG.counters || {};
   const allElements = window.ChemistryBIG.getAllElements();
 
   // Unlock checks should use the same single counter system
@@ -79,6 +71,14 @@ function updateElementCounter() {
       '<div style="padding: 8px; text-align: center; color: #93c5fd; font-size: 12px; opacity: 0.6;">No elements</div>';
     return;
   }
+
+  // for (const environment of environments) {
+  //   for (const [element, count] of Object.entries(
+  //     environment.countElements(),
+  //   )) {
+  //     counts[element] = (counts[element] || 0) + count;
+  //   }
+  // }
 
   // Track disappeared molecules
   window.ChemistryBIG = window.ChemistryBIG || {};

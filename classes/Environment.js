@@ -184,7 +184,7 @@ export class Environment {
     }
 
     // Collision detection between elements
-    checkCollisions(chemistryBIG) {
+    checkCollisions() {
         const n = this.elements.length;            // snapshot length
         const toRemove = new Set();           // Track indices to remove
 
@@ -231,7 +231,7 @@ export class Environment {
                     }
 
                     // Check for reaction after collision is handled
-                    const reaction = ChemistryBIG?.getReaction?.(e1.name, e2.name);
+                    const reaction = window.ChemistryBIG?.getReaction?.(e1.name, e2.name);
                     if (reaction) {
                         const baseP = reaction.probability ?? 0;
 
@@ -256,7 +256,7 @@ export class Environment {
                             const capitalizedName =
                                 productName.charAt(0).toUpperCase() + productName.slice(1).toLowerCase();
 
-                            const product = ChemistryBIG?.createElementInstance?.(
+                            const product = window.ChemistryBIG?.createElementInstance?.(
                                 capitalizedName,
                                 collisionX,
                                 collisionY
@@ -293,7 +293,7 @@ export class Environment {
         // }
     }
 
-    checkDecays(chemistryBIG) {
+    checkDecays() {
         const toRemove = new Set();
 
         for (let i = 0; i < this.elements.length; i++) {
@@ -301,14 +301,14 @@ export class Environment {
             if (!element) continue;
 
             // Check if this element can decay
-            const decay = ChemistryBIG?.getDecayReaction?.(element.name);
+            const decay = window.ChemistryBIG?.getDecayReaction?.(element.name);
             if (decay && Math.random() < (decay.probability ?? 0)) {
             // Element decays!
             const products = Array.isArray(decay.products) ? decay.products : [];
 
             for (const productName of products) {
                 const capitalizedName = productName.charAt(0).toUpperCase() + productName.slice(1).toLowerCase();
-                const product = ChemistryBIG?.createElementInstance?.(
+                const product = window.ChemistryBIG?.createElementInstance?.(
                 capitalizedName,
                 element.x,
                 element.y
@@ -320,6 +320,7 @@ export class Environment {
             }
 
             toRemove.add(i);
+            window.ChemistryBIG.spendCounter(element.name, 1);
             console.log(`Decay: ${element.name} -> ${decay.products?.join(' + ')}`);
             }
         }
