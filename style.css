@@ -47,6 +47,8 @@ body{
   flex-direction:row;
   gap:20px;
   flex-shrink:0;
+  position:relative;
+  z-index:10;
 }
 
 .sim-canvas{
@@ -61,6 +63,7 @@ body{
   height:50vw;
   cursor:crosshair;
   flex-shrink:0;
+  position: relative;
 }
 
 @media (max-width:520px){
@@ -197,4 +200,85 @@ body{
   color:var(--accent);
   font-size:12px;
   margin-top:4px;
+}
+
+/* upgrade panel */
+
+.upgrades-panel{
+  background: linear-gradient(180deg, rgba(12,18,28,0.95), rgba(8,12,18,0.9));
+  border-radius:28px;
+  border:1px solid rgba(125,211,252,0.06);
+  box-shadow: 0 12px 40px rgba(2,6,23,0.7), inset 0 1px 0 rgba(255,255,255,0.02);
+  padding:24px;
+  width: 220px;         /* tweak as you want */
+  max-height:600px;
+  overflow-y:auto;
+  flex-shrink:0;
+  position:relative;
+  z-index:20;
+  pointer-events:auto;
+}
+
+.upgrades-panel h3{
+  margin:0 0 16px 0;
+  color:var(--title);
+  font-size:16px;
+  font-weight:600;
+  text-align:center;
+}
+
+.upgrades-list{
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+  position:relative;
+  pointer-events:auto;
+}
+
+/* Each upgrade entry is a button */
+.upgrade-btn{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:10px;
+  pointer-events: auto;
+
+  width:100%;
+  padding:10px 12px;
+  border-radius:10px;
+
+  background:rgba(125,211,252,0.05);
+  border:1px solid rgba(125,211,252,0.12);
+  color:#e6eef8;
+
+  font-size:13px;
+  font-weight:600;
+
+  cursor:pointer;
+  transition: background 0.2s ease, border-color 0.2s ease, transform 0.05s ease;
+}
+
+.upgrade-btn:hover{
+  background:rgba(125,211,252,0.10);
+  border-color:rgba(125,211,252,0.22);
+}
+
+.upgrade-btn:active{
+  transform: translateY(1px);
+}
+
+.upgrade-btn:disabled{
+  opacity:0.45;
+  cursor:not-allowed;
+}
+
+.upgrade-name{
+  color:var(--muted);
+  font-weight:600;
+}
+
+.upgrade-cost{
+  color:var(--accent);
+  font-variant-numeric: tabular-nums;
+  font-weight:800;
 }
