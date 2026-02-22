@@ -313,7 +313,19 @@ function payCost(costMap) {
             break;
         }
     }
+
+
 const availableUpgrades = UPGRADES.slice();
+
+ function canAfford(costMap) {
+        for (const [symRaw, amt] of Object.entries(costMap)) {
+            const sym = normalizeSymbol(symRaw);
+            if (window.ChemistryBIG.getCounter(sym) < amt) return false;
+        }
+        return true;
+    }
+
+
 function setupUpgradeClicks() {
   const list = document.getElementById("upgrades-list");
   if (!list) return;
