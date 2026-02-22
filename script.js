@@ -1,11 +1,8 @@
-// import { Environment } from "./environment.js";
-import { Particle, ElementBase, Environment } from "./classes/classes.js";
-import { UPGRADES } from "./classes/upgrades.js";
+    import { ElementBase, Environment } from "./classes/classes.js";
+    import { UPGRADES } from "./classes/upgrades.js";
 
-let canvas = document.getElementById("sim-canvas");
-const ctx = canvas.getContext("2d");
-let DEBUG = true; // switch this to true/false depending on
-let paused = false;
+    let DEBUG = true; // switch this to true/false depending on
+    let paused = false; 
 
     // discovered elements tooltips
     const discoveredElements = new Set();
@@ -17,24 +14,7 @@ let paused = false;
     let spawnAmountIndex = 0;
     let spawnAmount = SPAWN_AMOUNTS[spawnAmountIndex];
 
-// --- Reaction speed bonus tuning ---
-const REACTION_SPEED_THRESHOLD = 2.5; // below this: no bonus
-const REACTION_SPEED_MAX = 12.0; // at/above this: full bonus
-const REACTION_SPEED_BONUS_MAX = 0.35; // max +35% absolute probability (clamped)
-
-    // helper
-    function clamp01(x) {
-    return Math.max(0, Math.min(1, x));
-    }
-
-    function spawnSimOnly(symbol, x, y) {
-        const sym = normalizeSymbol(symbol);
-        const e = window.ChemistryBIG?.createElementInstance?.(sym, x, y);
-        if (!e) return null;
-        elements.push(e);
-        return e;
-    }
-    function spawnFromStorage(symbol, count) {
+    function spawnFromStorage(symbol, count, environment) {
         if (paused) return;
 
         const sym = normalizeSymbol(symbol);
@@ -46,13 +26,13 @@ const REACTION_SPEED_BONUS_MAX = 0.35; // max +35% absolute probability (clamped
         window.ChemistryBIG.spendCounter(sym, count);
 
         // Spawn count instances near the center with a little jitter
-        const cx = canvas.width / 2;
-        const cy = canvas.height / 2;
+        const cx = environment.width / 2;
+        const cy = environment.height / 2;
 
         for (let i = 0; i < count; i++) {
             const jitterX = (Math.random() - 0.5) * 80;
             const jitterY = (Math.random() - 0.5) * 80;
-            spawnSimOnly(sym, cx + jitterX, cy + jitterY);
+            environment.spawnElement(sym, cx + jitterX, cy + jitterY);
         }
 
         updateElementCounter();
@@ -159,99 +139,18 @@ const REACTION_SPEED_BONUS_MAX = 0.35; // max +35% absolute probability (clamped
         });
     })();
 
-// --- Background texture ---
-const bgImage = new Image();
-bgImage.src = "./space_texture.jpg"; // put the correct relative path here
-bgImage.onload = () => console.log("Background loaded:", bgImage.src);
-bgImage.onerror = (e) =>
-  console.warn("Failed to load background:", bgImage.src, e);
-
-function drawBackground() {
-  // If not loaded yet, fallback to solid fill (avoids flashing/blank)
-  if (!bgImage.complete || bgImage.naturalWidth === 0) {
-    ctx.fillStyle = "#000";
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-    return;
-  }
-
-  // "cover" behavior: fill the canvas, keep aspect ratio, center crop
-  const cw = canvas.width,
-    ch = canvas.height;
-  const iw = bgImage.naturalWidth,
-    ih = bgImage.naturalHeight;
-
-  const scale = Math.max(cw / iw, ch / ih);
-  const dw = iw * scale;
-  const dh = ih * scale;
-  const dx = (cw - dw) / 2;
-  const dy = (ch - dh) / 2;
-
-  ctx.drawImage(bgImage, dx, dy, dw, dh);
-}
-
-// Resize canvas to fit container as a square
-function resizeCanvas() {
-  canvas.width = 600;
-  canvas.height = 600;
-}
-resizeCanvas();
-window.addEventListener("resize", resizeCanvas);
-
-// Element storage
-let elements = [];
-let particles = [];
-
-// -------- Click "push away" settings --------
-const CLICK_PUSH_RADIUS = 120; // how far the click affects elements (px)
-const CLICK_PUSH_STRENGTH = 6.0; // how hard the click pushes (tune this)
-const CLICK_PUSH_FALLOFF = 1.6; // >1 = stronger near center, softer at edge
-
-function pushNearbyElements(clickX, clickY) {
-  const r = CLICK_PUSH_RADIUS;
-
-  for (const e of elements) {
-    if (!e) continue;
-
-    const dx = e.x - clickX;
-    const dy = e.y - clickY;
-    const dist = Math.sqrt(dx * dx + dy * dy);
-
-    // only affect elements in radius
-    if (dist > r) continue;
-
-    // direction away from click (handle exact center safely)
-    let nx, ny;
-    if (dist < 0.0001) {
-      const a = Math.random() * Math.PI * 2;
-      nx = Math.cos(a);
-      ny = Math.sin(a);
-    } else {
-      nx = dx / dist;
-      ny = dy / dist;
-    }
-
-    // falloff: 1 at click, 0 at edge
-    const t = 1 - dist / r;
-    const impulse = CLICK_PUSH_STRENGTH * Math.pow(t, CLICK_PUSH_FALLOFF);
-
-    // add velocity (impulse)
-    e.vx += nx * impulse;
-    e.vy += ny * impulse;
-  }
-}
-
-// Register ElementBase globally
-window.ChemistryBIG = window.ChemistryBIG || {};
-window.ChemistryBIG.ElementBase = ElementBase;
-window.ChemistryBIG.counters = window.ChemistryBIG.counters || {};
-window.ChemistryBIG.getCounter = function (name) {
-  return window.ChemistryBIG.counters[name] || 0;
-};
-window.ChemistryBIG.incrCounter = function (name, amount = 1) {
-  const sym = normalizeSymbol(name);
-  const prev = window.ChemistryBIG.counters[sym] || 0;
-  const next = prev + amount;
-  window.ChemistryBIG.counters[sym] = next;
+    // Register ElementBase globally
+    window.ChemistryBIG = window.ChemistryBIG || {};
+    window.ChemistryBIG.ElementBase = ElementBase;
+    window.ChemistryBIG.counters = window.ChemistryBIG.counters || {};
+    window.ChemistryBIG.getCounter = function (name) {
+    return window.ChemistryBIG.counters[name] || 0;
+    };
+    window.ChemistryBIG.incrCounter = function (name, amount = 1) {
+        const sym = normalizeSymbol(name);
+        const prev = window.ChemistryBIG.counters[sym] || 0;
+        const next = prev + amount;
+        window.ChemistryBIG.counters[sym] = next;
 
   // Only trigger tooltip on first time crossing 0 -> >0
   onElementGained(sym, prev, next);
@@ -259,193 +158,12 @@ window.ChemistryBIG.incrCounter = function (name, amount = 1) {
   return next;
 };
 
-window.ChemistryBIG.spendCounter = function (name, amount = 1) {
-  const cur = window.ChemistryBIG.getCounter(name);
-  const next = Math.max(0, cur - amount);
-  window.ChemistryBIG.counters[name] = next;
-  return next;
-};
-
-// Collision detection between elements
-function checkCollisions() {
-  const n = elements.length; // snapshot length
-  const toRemove = new Set(); // Track indices to remove
-
-  for (let i = 0; i < n; i++) {
-    const e1 = elements[i];
-    if (!e1) continue;
-
-    for (let j = i + 1; j < n; j++) {
-      const e2 = elements[j];
-      if (!e2) continue;
-
-      // Calculate distance between centers
-      const dx = e2.x - e1.x;
-      const dy = e2.y - e1.y;
-      const distance = Math.sqrt(dx * dx + dy * dy);
-
-      // Check if collision occurred (distance < sum of sizes)
-      if (distance < e1.size + e2.size) {
-        // Calculate speed magnitudes
-        const speed1 = Math.sqrt(e1.vx * e1.vx + e1.vy * e1.vy);
-        const speed2 = Math.sqrt(e2.vx * e2.vx + e2.vy * e2.vy);
-        const combinedSpeed = speed1 + speed2;
-
-        // Calculate collision angle
-        const angle = Math.atan2(dy, dx);
-
-        // Split combined speed and send in opposite directions
-        const splitSpeed = combinedSpeed / 2;
-        e1.vx = -Math.cos(angle) * splitSpeed;
-        e1.vy = -Math.sin(angle) * splitSpeed;
-        e2.vx = Math.cos(angle) * splitSpeed;
-        e2.vy = Math.sin(angle) * splitSpeed;
-
-        // Separate elements to prevent overlap
-        const overlap = e1.size + e2.size - distance;
-        if (overlap > 0 && distance > 0) {
-          const separationX = (dx / distance) * (overlap / 2 + 1);
-          const separationY = (dy / distance) * (overlap / 2 + 1);
-
-          e1.x -= separationX;
-          e1.y -= separationY;
-          e2.x += separationX;
-          e2.y += separationY;
-        }
-
-        // Check for reaction after collision is handled
-        const reaction = window.ChemistryBIG?.getReaction?.(e1.name, e2.name);
-        if (reaction) {
-          const baseP = reaction.probability ?? 0;
-
-          // Linear speed-based bonus (starts at threshold, maxes at REACTION_SPEED_MAX)
-          const t = clamp01(
-            (combinedSpeed - REACTION_SPEED_THRESHOLD) /
-              (REACTION_SPEED_MAX - REACTION_SPEED_THRESHOLD),
-          );
-          const bonus = t * REACTION_SPEED_BONUS_MAX;
-
-          // Final probability (clamped to 1)
-          const finalP = Math.min(1, baseP + bonus + (reactionProbBonus || 0));
-
-          if (Math.random() < finalP) {
-            const products = Array.isArray(reaction.products)
-              ? reaction.products
-              : [];
-
-            // Collision point (midpoint between reactants)
-            const collisionX = (e1.x + e2.x) / 2;
-            const collisionY = (e1.y + e2.y) / 2;
-
-            for (const productName of products) {
-              spawnElement(productName, collisionX, collisionY);
-            }
-
-            // consume reactants:
-            toRemove.add(i);
-            toRemove.add(j);
-
-            // decrement counters for consumed reactants (single counter truth)
-            //window.ChemistryBIG.spendCounter(e1.name, 1);
-            //window.ChemistryBIG.spendCounter(e2.name, 1);
-
-            updateElementCounter();
-          }
-        }
-      }
-    }
-  }
-
-  // Remove marked elements in reverse order to preserve indices
-  const indicesToRemove = Array.from(toRemove).sort((a, b) => b - a);
-  indicesToRemove.forEach((index) => {
-    elements.splice(index, 1);
-  });
-
-  // Update counter if any element was removed
-  if (indicesToRemove.length > 0) {
-    updateElementCounter();
-  }
-}
-
-// Check for decay reactions on individual elements
-function checkDecays() {
-  const toRemove = new Set();
-
-  for (let i = 0; i < elements.length; i++) {
-    const element = elements[i];
-    if (!element) continue;
-
-    const decay = window.ChemistryBIG?.getDecayReaction?.(element.name);
-    if (decay && Math.random() < (decay.probability ?? 0)) {
-      const products = Array.isArray(decay.products) ? decay.products : [];
-
-      for (const productName of products) {
-        spawnElement(productName, element.x, element.y);
-      }
-
-      toRemove.add(i);
-      window.ChemistryBIG.spendCounter(element.name, 1);
-      console.log(`Decay: ${element.name} -> ${products.join(" + ")}`);
-    }
-  }
-
-  const indicesToRemove = Array.from(toRemove).sort((a, b) => b - a);
-  indicesToRemove.forEach((index) => elements.splice(index, 1));
-
-  if (indicesToRemove.length > 0) updateElementCounter();
-}
-
-    let hydrogenClickChance = 0.1;
-    let sodiumClickChance = 0.0;
-    let potassiumClickChance = 0.0;
-    let rubidiumClickChance = 0.0;
-    let cesiumClickChance = 0.0;
-    let franciumClickChance = 0.0;
-
-    // Canvas click handler to create hydrogen (10% chance) and particle effect
-    canvas.addEventListener('click', (event) => {
-        if (paused) return;
-        const rect = canvas.getBoundingClientRect();
-
-  debug(`Rect left: ${rect.left}`);
-  debug(`Rect top: ${rect.top}`);
-  debug(`Mouse X: ${event.clientX}`);
-  debug(`Mouse Y: ${event.clientY}`);
-
-  const x = event.clientX - rect.left;
-  const y = event.clientY - rect.top;
-
-  // NEW: push nearby elements away from the click
-  pushNearbyElements(x, y);
-
-  // create particle effect on every click
-  for (let i = 0; i < 8; i++) {
-    particles.push(new Particle(x, y));
-  }
-
-        if (Math.random() < hydrogenClickChance) {
-            spawnElement("H", x, y);
-            updateElementCounter();
-        } else if (Math.random() < sodiumClickChance) {
-            spawnElement("Na", x, y);
-            updateElementCounter();
-        } else if (Math.random() < potassiumClickChance) {
-            spawnElement("K", x, y);
-            updateElementCounter();
-        } else if (Math.random() < rubidiumClickChance) {
-            spawnElement("Rb", x, y);
-            updateElementCounter();
-        } else if (Math.random() < cesiumClickChance) {
-            spawnElement("Cs", x, y);
-            updateElementCounter();
-        } else if (Math.random() < franciumClickChance) {
-            spawnElement("Fr", x, y);
-            updateElementCounter();
-        }
-    });
-
-// element counter -----------------------------
+    window.ChemistryBIG.spendCounter = function (name, amount = 1) {
+    const cur = window.ChemistryBIG.getCounter(name);
+    const next = Math.max(0, cur - amount);
+    window.ChemistryBIG.counters[name] = next;
+    return next;
+    };
 
 // Update the element counter display
 function updateElementCounter() {
@@ -460,7 +178,7 @@ function updateElementCounter() {
 
   counterList.innerHTML = "";
 
-  const elementsToShow = allElements.filter((name) => (counts[name] || 0) > 0);
+        const elementsToShow = allElements.filter((name) => (counts[name] || 0) > 0);
 
   if (elementsToShow.length === 0) {
     counterList.innerHTML =
@@ -492,6 +210,37 @@ function updateElementCounter() {
             counterList.appendChild(counterItem);
         }
         requestSpawnButtonsRefresh();
+
+//   }
+
+//   // Animate molecule unlock: shrink and disappear after 5 seconds
+//   const moleculesList = document.getElementById("molecules-list");
+//   if (window.ChemistryBIG.moleculeDefinitions) {
+//     Object.entries(window.ChemistryBIG.moleculeDefinitions).forEach(
+//       ([molKey, molDef]) => {
+//         // Prevent rendering if disappeared
+//         if (window.ChemistryBIG.disappearedMolecules.has(molKey)) {
+//           const molItem = moleculesList?.querySelector(
+//             `.molecule-item[data-molecule='${molKey}']`,
+//           );
+//           if (molItem) molItem.remove();
+//           return;
+//         }
+//         if (molDef.unlocked) {
+//           const molItem = moleculesList?.querySelector(
+//             `.molecule-item[data-molecule='${molKey}']`,
+//           );
+//           if (molItem && !molItem.classList.contains("disappear")) {
+//             setTimeout(() => {
+//               molItem.classList.add("disappear");
+//               window.ChemistryBIG.disappearedMolecules.add(molKey);
+//               setTimeout(() => molItem.remove(), 1000);
+//             }, 5000);
+//           }
+//         }
+//       },
+//     );
+//   }
     }
 
 // element counter -----------------------------
@@ -502,53 +251,6 @@ function normalizeSymbol(sym) {
   return s[0].toUpperCase() + s.slice(1).toLowerCase(); // he -> He, LI -> Li
 }
 
-    function spawnElement(name, x, y) {
-        const symbol = normalizeSymbol(name);
-
-        const e = window.ChemistryBIG?.createElementInstance?.(symbol, x, y);
-        if (!e) return null;
-
-        elements.push(e);
-
-        // increment using the actual created symbol
-        window.ChemistryBIG.incrCounter(e.name, 1);
-
-        return e;
-        }
-        // upgrade system
-        const UPGRADE_WINDOW_SIZE = 5;
-        let availableUpgrades = UPGRADES.slice();
-
-        // tracks auto-generation rates by element
-        const autoRates = Object.create(null);
-
-        let clickMultiplier = 1.0;
-        let reactionProbBonus = 0.0;
-
-
-        function canAfford(costMap) {
-        for (const [symRaw, amt] of Object.entries(costMap)) {
-            const sym = normalizeSymbol(symRaw);
-            if (window.ChemistryBIG.getCounter(sym) < amt) return false;
-        }
-        return true;
-    }
-
-    function collectAllElementsFromSim() {
-        // Count what’s currently in the sim
-        for (const e of elements) {
-            if (!e) continue;
-            // increment counter for each element removed
-            window.ChemistryBIG.incrCounter(e.name, 1);
-        }
-
-        // Clear sim arrays
-        elements.length = 0;
-
-        // Update UI and upgrade affordability (since counters changed)
-        updateElementCounter();
-        refreshUpgradeAffordability?.();
-    }
 
     const collectBtn = document.getElementById("collect-all-btn");
     if (collectBtn) {
@@ -557,7 +259,7 @@ function normalizeSymbol(sym) {
         e.stopPropagation();
 
         if (paused) return;
-        collectAllElementsFromSim();
+        // collectAllElementsFromSim(); TODO FIX
         });
     }
 
@@ -569,8 +271,9 @@ function payCost(costMap) {
 }
 
 
-function applyUpgradeEffect(effect) {
-  if (!effect) return;
+    // NOTE - if this ever gets expanded, this can be greatly simplified with the new way click chances and states are being stored on the game object.
+    function applyUpgradeEffect(effect) {
+        if (!effect) return;
 
         switch (effect.type) {
             case "auto_element": {
@@ -585,24 +288,28 @@ function applyUpgradeEffect(effect) {
             reactionProbBonus += effect.add;
             break;
             case "hydrogen_click_chance_add":
-            hydrogenClickChance += effect.add;
-            hydrogenClickChance = Math.min(hydrogenClickChance, 0.95); // cap at 95%
+            click_chance["H"] += effect.add;
+            click_chance["H"] = Math.min(click_chance["H"], 0.95); // cap at 95%
+            break;
+            case "sodium_click_chance_add":
+            click_chance["Na"] += effect.add;
+            click_chance["Na"] = Math.min(click_chance["Na"], 0.5); // cap at 50%
             break;
             case "potassium_click_chance_add":
-            potassiumClickChance += effect.add;
-            potassiumClickChance = Math.min(potassiumClickChance, 0.5); // cap at 50%
+            click_chance["K"] += effect.add;
+            click_chance["K"] = Math.min(click_chance["K"], 0.5);
             break;
             case "rubidium_click_chance_add":
-            rubidiumClickChance += effect.add;
-            rubidiumClickChance = Math.min(rubidiumClickChance, 0.5);
+            click_chance["Rb"] += effect.add;
+            click_chance["Rb"] = Math.min(click_chance["Rb"], 0.5);
             break;
             case "caesium_click_chance_add":
-            caesiumClickChance += effect.add;
-            caesiumClickChance = Math.min(caesiumClickChance, 0.5);
+            click_chance["Cs"] += effect.add;
+            click_chance["Cs"] = Math.min(click_chance["Cs"], 0.5);
             break;
             case "francium_click_chance_add":
-            franciumClickChance += effect.add;
-            franciumClickChance = Math.min(franciumClickChance, 0.5);
+            click_chance["Fr"] += effect.add;
+            click_chance["Fr"] = Math.min(click_chance["Fr"], 0.5);
             break;
         }
     }
@@ -790,25 +497,28 @@ function onElementGained(symbol, prevCount, newCount) {
 renderUpgradesPanel();
 requestAnimationFrame(autoTick);
 
-let Game = {
-  fps: 60,
-  lastRender: Date.now(),
-  deltaTime: 0,
-  frame: 0,
-
-  update: function () {
-    // update elements
-    elements.forEach((element) => {
-      element.update(canvas);
-    });
-    // check collisions between elements
-    checkCollisions();
-    // check for decay reactions
-    checkDecays();
-    // update particles
-    particles = particles.filter((p) => {
-      p.update();
-      return p.life > 0;
+    let Game = {
+    fps: 60,
+    lastRender: Date.now(),
+    deltaTime: 0,
+    frame: 0,
+    environments: [],
+  click_chances: {
+    "H": 0.1,
+    "He": 0.0,
+    "Na": 0.0,
+    "K": 0.0,
+    "Rb": 0.0,
+    "Cs": 0.0,
+    "Fr": 0.0
+  },
+    update() {
+    // update environments
+    this.environments.forEach((environment) => {
+      environment.updateElements();
+      environment.checkCollisions();
+      environment.checkDecays();
+      environment.updateParticles();
     });
   },
 
@@ -816,15 +526,10 @@ let Game = {
     Game.lastRender = Date.now();
 
     // background first
-    drawBackground();
-
-    // draw elements
-    elements.forEach((element) => {
-      element.draw(ctx);
-    });
-    // draw particles
-    particles.forEach((particle) => {
-      particle.draw(ctx);
+    this.environments.forEach((environment) => {
+      environment.drawCanvasBackground();
+      environment.drawElements();
+      environment.drawParticles();
     });
 
     // debug(`Frame ${Game.frame}: Loaded in ${Game.deltaTime} ms`);
@@ -837,30 +542,77 @@ let Game = {
     return Game.deltaTime >= mspf;
   },
 
-  loop: () => {
+  loop() {
     if (!paused) {
       Game.update();
       if (Game.shouldRenderFrame()) {
         Game.draw();
+        updateElementCounter();
         Game.frame += 1;
       }
     }
     window.requestAnimationFrame(Game.loop);
   },
+
+  // when a canvas is clicked, all logic is resolved here.
+  resolveClick() {
+    console.log("A click is being resolved!");
+    const results = [];
+
+    for (const [element, chance] of Object.entries(Game.click_chances)) {
+      if (Math.random() < chance) {
+        console.log(element);
+        results.push(element);
+      }
+    }
+
+    return results;
+  }
 };
+debug("Game element made");
 
-function debug(message) {
-  if (DEBUG) console.log(message);
+let mainEnvironment = new Environment(Game.resolveClick);
+mainEnvironment.initializeCanvas(document.getElementById("sim-main"), 600, 600);
+mainEnvironment.canvas.classList.add("main-canvas");
+mainEnvironment.canvas.id = "sim-canvas-main";
+mainEnvironment.setBGImage("./space_texture.jpg");
+Game.environments.push(mainEnvironment);
+debug("Main environment made");
+
+function makeEnv() {
+  let secEnvironment = new Environment(Game.resolveClick);
+  secEnvironment.initializeCanvas(document.getElementById("sim-other"), 500, 200);
+  Game.environments.push(secEnvironment);
 }
+for (let i = 0; i < 3; i++) {
+  makeEnv();
+}
+debug("Secondary environments made");
 
-    // Initialize element counter on page load
-    updateElementCounter();
-    document.addEventListener("click", (e) => {
-        console.log("DOCUMENT CLICK:", e.target);
-    }, true); // capture phase
-    setupUpgradeClicks();
-    renderUpgradesPanel();
-
+// Initialize element counter on page load
+updateElementCounter();
+document.addEventListener(
+  "click",
+  (e) => {
+    // console.log("DOCUMENT CLICK:", e.target);
+  },
+  true,
+); // capture phase
+updateElementCounter();
+document.addEventListener("click", (e) => {
+    console.log("DOCUMENT CLICK:", e.target);
+}, true); // capture phase
+setupUpgradeClicks();
+renderUpgradesPanel();
 
 // Begin looping
 window.requestAnimationFrame(Game.loop);
+
+
+
+
+
+/*** HELPER FUNCTIONS ***/
+    function debug(message) {
+    if (DEBUG) console.log(message);
+    }
