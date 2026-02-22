@@ -8,20 +8,20 @@
 
   // Reaction definitions (library of all available reactions)
   const REACTION_DEFINITIONS = [
-    { reactants: ['H', 'H'], products: ['He'], consumes: true, probability: 0.15, note: 'H + H -> He' },
-    { reactants: ['He', 'He'], products: ['Br'], consumes: true, probability: 0.5, note: 'He + He -> Br' },
-    { reactants: ['Br', 'H'], products: ['Li'], consumes: true, probability: 0.00000005, note: 'Br + H -> Li' },
-    { reactants: ['Li', 'He'], products: ['B'], consumes: true, probability: 0.000000001, note: 'Li + He -> B' },
-    { reactants: ['Br', 'He'], products: ['C'], consumes: true, probability: 1, note: 'Br + He -> C' },
-    { reactants: ['C', 'H'], products: ['N'], consumes: true, probability: 0.001, note: 'C + H -> N' },
-    { reactants: ['C', 'He'], products: ['O'], consumes: true, probability: 0.005, note: 'C + He -> O' },
-    { reactants: ['O', 'H'], products: ['F'], consumes: true, probability: 0.0000000005, note: 'O + H -> F' },
-    { reactants: ['O', 'He'], products: ['Ne'], consumes: true, probability: 0.00000001, note: 'O + He -> Ne' }
+    { reactants: ['H', 'H'], products: ['He'], consumes: true, probability: 0.1, note: 'H + H -> He' },
+    { reactants: ['He', 'He'], products: ['Be'], consumes: true, probability: 0.1, note: 'He + He -> Be' },
+    { reactants: ['Be', 'H'], products: ['Li'], consumes: true, probability: 0.05, note: 'Be + H -> Li' },
+    { reactants: ['Li', 'He'], products: ['B'], consumes: true, probability: 0.001, note: 'Li + He -> B' },
+    { reactants: ['Be', 'He'], products: ['C'], consumes: true, probability: 0.09, note: 'Be + He -> C' },
+    { reactants: ['C', 'H'], products: ['N'], consumes: true, probability: 0.1, note: 'C + H -> N' },
+    { reactants: ['C', 'He'], products: ['O'], consumes: true, probability: 0.5, note: 'C + He -> O' },
+    { reactants: ['O', 'H'], products: ['F'], consumes: true, probability: 0.05, note: 'O + H -> F' },
+    { reactants: ['O', 'He'], products: ['Ne'], consumes: true, probability: 0.01, note: 'O + He -> Ne' }
   ];
 
   // Decay reactions (solo element reactions)
   const DECAY_DEFINITIONS = [
-    { reactant: 'Br', products: ['He', 'He'], probability: 0.0000000001, note: 'Br -> He + He' }
+    { reactant: 'Be', products: ['He', 'He'], probability: 0.0001, note: 'Be -> He + He' }
   ];
 
   // Build the REACTIONS Map from definitions
