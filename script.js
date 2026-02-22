@@ -145,19 +145,7 @@ function normalizeSymbol(sym) {
   return s[0].toUpperCase() + s.slice(1).toLowerCase(); // he -> He, LI -> Li
 }
 
-function spawnElement(name, x, y) {
-  const symbol = normalizeSymbol(name);
 
-  const e = window.ChemistryBIG?.createElementInstance?.(symbol, x, y);
-  if (!e) return null;
-
-  elements.push(e);
-
-  // increment using the actual created symbol
-  window.ChemistryBIG.incrCounter(e.name, 1);
-
-  return e;
-}
 // upgrade system
 const UPGRADE_WINDOW_SIZE = 5;
 let availableUpgrades = UPGRADES.slice();
@@ -404,7 +392,14 @@ let Game = {
   lastRender: Date.now(),
   deltaTime: 0,
   frame: 0,
-
+  click_chances: {
+    hydrogenClickChance: 0.1,
+    sodiumClickChance: 0.0,
+    potassiumClickChance: 0.0,
+    rubidiumClickChance: 0.0,
+    cesiumClickChance: 0.0,
+    franciumClickChance: 0.0
+  },
   update: function () {
     // update environments
     environments.forEach((environment) => {
