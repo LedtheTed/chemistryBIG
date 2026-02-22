@@ -32,6 +32,8 @@
 
 		document.body.appendChild(el);
 		requestAnimationFrame(() => el.classList.add('visible'));
+		// Auto-dismiss after 5 seconds
+		setTimeout(remove, 5000);
 	}
 
 	// Inject minimal styles for the achievement popup (vocab word: idempotent)

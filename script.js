@@ -256,7 +256,7 @@
     if (indicesToRemove.length > 0) updateElementCounter();
     }
 
-    let hydrogenClickChance = 0.1;
+    let hydrogenClickChance = 1;
     // Canvas click handler to create hydrogen (10% chance) and particle effect
     canvas.addEventListener('click', (event) => {
         if (paused) return;
@@ -530,6 +530,12 @@
         paused = false;
     }
 
+    // Track background opacity globally
+    window.ChemistryBIG = window.ChemistryBIG || {};
+    if (typeof window.ChemistryBIG.chadKenOpacity !== "number") {
+        window.ChemistryBIG.chadKenOpacity = 1;
+    }
+
     function showElementTooltip(symbol) {
         if (tooltipOpen) return;
         tooltipOpen = true;
@@ -542,10 +548,12 @@
         const overlay = document.createElement("div");
         overlay.id = "element-tooltip-overlay";
         overlay.innerHTML = `
-            <div class="element-tooltip-card" style="border-left: 6px solid ${def.color || "#2dd4bf"}">
-            <div class="element-tooltip-title">${symbol} — ${niceName}</div>
-            <div class="element-tooltip-desc">${desc}</div>
-            <button type="button" class="element-tooltip-close">Continue</button>
+            <div class="element-tooltip-card" style="border-left: 6px solid ${def.color || "#2dd4bf"}; background: url('consultant_chad_ken.jpeg') center/cover no-repeat; min-height: 220px; position: relative; opacity: ${bgOpacity};">
+                <div style="background: transparent; border-radius: 12px; padding: 16px; margin: 24px;">
+                    <div class="element-tooltip-title" style="color: #fff;">${symbol} — ${niceName}</div>
+                    <div class="element-tooltip-desc" style="color: #e0e0e0;">${desc}</div>
+                    <button type="button" class="element-tooltip-close" style="margin-top: 16px;">Continue</button>
+                </div>
             </div>
         `;
 
@@ -558,8 +566,8 @@
             resumeGame();
             // If more discoveries happened while paused, show next
             if (discoveryQueue.length > 0) {
-            const next = discoveryQueue.shift();
-            showElementTooltip(next);
+                const next = discoveryQueue.shift();
+                showElementTooltip(next);
             }
         });
     }
