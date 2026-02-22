@@ -363,8 +363,18 @@
                         const collisionX = (e1.x + e2.x) / 2;
                         const collisionY = (e1.y + e2.y) / 2;
 
+                        const a = normalizeSymbol(e1.name);
+                        const b = normalizeSymbol(e2.name);
+                        const isUU = (a === "U" && b === "U");
+                        const isEndgame = !!reaction.endgame || isUU;
+
                         triggerReactionEffect(collisionX, collisionY, reaction, e1, e2, particles);
                         
+                        if (isEndgame) {
+                            triggerEndgame(collisionX, collisionY);
+                            return; // stop processing collisions this frame
+                        }
+
                         for (const productName of products) {
                             spawnElement(productName, collisionX, collisionY);
                         }
@@ -384,16 +394,106 @@
         }
     }
 
-    // Remove marked elements in reverse order to preserve indices
-    const indicesToRemove = Array.from(toRemove).sort((a, b) => b - a);
-    indicesToRemove.forEach(index => {
-        elements.splice(index, 1);
-    });
-    
-    // Update counter if any element was removed
-    if (indicesToRemove.length > 0) {
-        updateElementCounter();
+        // Remove marked elements in reverse order to preserve indices
+        const indicesToRemove = Array.from(toRemove).sort((a, b) => b - a);
+        indicesToRemove.forEach(index => {
+            elements.splice(index, 1);
+        });
+        
+        // Update counter if any element was removed
+        if (indicesToRemove.length > 0) {
+            updateElementCounter();
+        }
     }
+
+    function burstParticles(x, y, count, speed = 6) {
+        for (let i = 0; i < count; i++) {
+            const p = new Particle(x, y);
+
+            // Optional: if your Particle supports velocity, kick it outward
+            if ("vx" in p && "vy" in p) {
+            const a = Math.random() * Math.PI * 2;
+            const s = speed * (0.25 + Math.random()); // random magnitude
+            p.vx = Math.cos(a) * s;
+            p.vy = Math.sin(a) * s;
+            }
+
+            particles.push(p);
+        }
+    }
+
+    function triggerEndgame(collisionX, collisionY) {
+        // 1) Big central blast
+        burstParticles(collisionX, collisionY, 220, 10);
+
+        // 2) Burst from every element that is about to be removed
+        // (cap so it can’t melt the browser if you have tons of elements)
+        const perElement = 6;
+        const maxTotal = 800;
+        let total = 0;
+
+        for (const e of elements) {
+            if (!e) continue;
+            if (total >= maxTotal) break;
+
+            burstParticles(e.x, e.y, perElement, 5);
+            total += perElement;
+        }
+
+        // 3) Clear simulation
+        elements.length = 0;
+
+        // If you want to also clear stored counters (optional):
+        // window.ChemistryBIG.counters = {};
+        // (or keep counters and only clear the sim — up to you)
+
+        // 4) Update UI
+        updateElementCounter();
+        refreshUpgradeAffordability?.();
+
+        // 5) Optional: pause + show overlay message
+        paused = true;
+
+        const existing = document.getElementById("endgame-overlay");
+        if (!existing) {
+            const overlay = document.createElement("div");
+            overlay.id = "endgame-overlay";
+            overlay.style.cssText = `
+            position:fixed; inset:0; background:rgba(2,6,23,0.82);
+            display:flex; align-items:center; justify-content:center;
+            z-index:10000; color:#e6eef8; text-align:center; padding:24px;
+            `;
+            overlay.innerHTML = `
+            <div style="
+                width:min(520px, 92vw);
+                background:rgba(12,18,28,0.92);
+                border:1px solid rgba(125,211,252,0.18);
+                border-radius:18px;
+                box-shadow:0 20px 70px rgba(2,6,23,0.85);
+                padding:18px;">
+                <div style="font-weight:900; font-size:22px; color:#7dd3fc; margin-bottom:10px;">
+                Criticality Achieved
+                </div>
+                <div style="color:#93c5fd; font-size:14px; line-height:1.4;">
+                Two Uranium nuclei collided and triggered a runaway event.
+                </div>
+                <button id="endgame-restart" type="button" style="
+                margin-top:14px; width:100%;
+                padding:10px 12px; border-radius:12px;
+                border:1px solid rgba(45,212,191,0.25);
+                background:rgba(45,212,191,0.12);
+                color:#e6eef8; font-weight:800; cursor:pointer;">
+                Continue (unpause)
+                </button>
+            </div>
+            `;
+            document.body.appendChild(overlay);
+
+            overlay.querySelector("#endgame-restart").addEventListener("click", () => {
+            overlay.remove();
+            paused = false;
+            });
+        }
     }
 
     // Check for decay reactions on individual elements
@@ -594,7 +694,7 @@
         return e;
         }
         // upgrade system
-        const UPGRADE_WINDOW_SIZE = 5;
+        const UPGRADE_WINDOW_SIZE = 7;
         let availableUpgrades = UPGRADES.slice();
 
         // tracks auto-generation rates by element

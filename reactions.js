@@ -198,6 +198,7 @@
     { reactants:['Ac','H'], products:['Th'], consumes:true, probability:0.004, note:'Ac + H -> Th (+1 proton fallback)' },
     { reactants:['Th','H'], products:['Pa'], consumes:true, probability:0.004, note:'Th + H -> Pa (+1 proton fallback)' },
     { reactants:['Pa','H'], products:['U'],  consumes:true, probability:0.004, note:'Pa + H -> U (+1 proton fallback)' },
+    { reactants:['U','U'], products:[],  consumes:true, probability:1.0, note:'U + U -> END (+1 proton fallback)', endgame: true },
 
 
     ];
