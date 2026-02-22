@@ -528,7 +528,7 @@ requestAnimationFrame(autoTick);
   },
     update() {
     // update environments
-    this.environments.forEach((environment) => {
+    Game.environments.forEach((environment) => {
       environment.updateElements();
       environment.checkCollisions();
       environment.checkDecays();
@@ -540,7 +540,7 @@ requestAnimationFrame(autoTick);
     Game.lastRender = Date.now();
 
     // background first
-    this.environment.forEach((environment) => {
+    Game.environments.forEach((environment) => {
       environment.drawCanvasBackground();
       environment.drawElements();
       environment.drawParticles();
