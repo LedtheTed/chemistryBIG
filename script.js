@@ -27,6 +27,10 @@
         return Math.max(0, Math.min(1, x));
     }
 
+    function formatCount(x) {
+        return Number.isInteger(x) ? x : x.toFixed(1);
+    }
+
     function spawnSimOnly(symbol, x, y) {
         const sym = normalizeSymbol(symbol);
         const e = window.ChemistryBIG?.createElementInstance?.(sym, x, y);
@@ -55,7 +59,7 @@
             spawnSimOnly(sym, cx + jitterX, cy + jitterY);
         }
 
-        updateElementCounter();
+        requestCounterUIRefresh();
         refreshUpgradeAffordability?.();
     }
 
@@ -69,7 +73,7 @@
         spawnAmount = SPAWN_AMOUNTS[spawnAmountIndex];
 
         spawnAmtBtn.textContent = `Add Amount: ${spawnAmount}`;
-        requestSpawnButtonsRefresh();
+        requestCounterUIRefresh();
         });
     }
     let spawnButtonsScheduled = false;
@@ -159,6 +163,25 @@
         });
     })();
 
+    // ---- Counter+Add UI scheduling (prevents re-render spam) ----
+    let counterUiScheduled = false;
+    let counterUiDirty = true;      // force initial render
+    let lastCounterSignature = "";  // when list composition actually changes
+
+    function requestCounterUIRefresh() {
+        counterUiDirty = true;
+        if (counterUiScheduled) return;
+
+        counterUiScheduled = true;
+        requestAnimationFrame(() => {
+            counterUiScheduled = false;
+            if (!counterUiDirty) return;
+            counterUiDirty = false;
+
+            refreshCounterUI(); // smart rebuild/update
+        });
+    }
+
     // --- Background texture ---
     const bgImage = new Image();
     bgImage.src = "./space_texture.jpg"; // put the correct relative path here
@@ -242,12 +265,17 @@
     window.ChemistryBIG.ElementBase = ElementBase;
     window.ChemistryBIG.counters = window.ChemistryBIG.counters || {};
     window.ChemistryBIG.getCounter = function(name) {
-    return window.ChemistryBIG.counters[name] || 0;
+        const sym = normalizeSymbol(name);
+        const v = window.ChemistryBIG.counters[sym];
+        const n = Number(v);
+        return Number.isFinite(n) ? n : 0;
     };
     window.ChemistryBIG.incrCounter = function(name, amount = 1) {
         const sym = normalizeSymbol(name);
-        const prev = window.ChemistryBIG.counters[sym] || 0;
-        const next = prev + amount;
+        const prev = window.ChemistryBIG.getCounter(sym);
+        const add = Number(amount);
+        const next = prev + (Number.isFinite(add) ? add : 0);
+
         window.ChemistryBIG.counters[sym] = next;
 
         // Only trigger tooltip on first time crossing 0 -> >0
@@ -257,10 +285,13 @@
     };
 
     window.ChemistryBIG.spendCounter = function(name, amount = 1) {
-    const cur = window.ChemistryBIG.getCounter(name);
-    const next = Math.max(0, cur - amount);
-    window.ChemistryBIG.counters[name] = next;
-    return next;
+        const sym = normalizeSymbol(name);
+        const cur = window.ChemistryBIG.getCounter(sym);
+        const sub = Number(amount);
+        const next = Math.max(0, cur - (Number.isFinite(sub) ? sub : 0));
+
+        window.ChemistryBIG.counters[sym] = next;
+        return next;
     };
 
     // Collision detection between elements
@@ -447,41 +478,98 @@
 
     // Update the element counter display
     function updateElementCounter() {
-        const counterList = document.getElementById("counter-list");
+        // Public entry point — keep your calls everywhere
+        requestCounterUIRefresh();
+    }
+
+    function refreshCounterUI() {
+        const container = document.getElementById("counter-add-list") || document.getElementById("counter-list");
+        if (!container) return;
+
         const counts = window.ChemistryBIG.counters || {};
         const allElements = window.ChemistryBIG.getAllElements();
 
-        // Unlock checks should use the same single counter system
+        // Molecule unlock checks still run, but no DOM rebuild unless needed
         if (window.ChemistryBIG.checkMoleculeUnlocks) {
             window.ChemistryBIG.checkMoleculeUnlocks(counts);
         }
 
-        counterList.innerHTML = "";
+        const elementsToShow = allElements
+            .map(normalizeSymbol)
+            .filter(sym => window.ChemistryBIG.getCounter(sym) > 0);
 
-        const elementsToShow = allElements.filter(name => (counts[name] || 0) > 0);
+        // Signature changes when:
+        // - which elements are shown changes
+        // - spawnAmount changes (button label/cost changes)
+        const signature = `${spawnAmount}|${elementsToShow.join(",")}`;
 
-        if (elementsToShow.length === 0) {
-            counterList.innerHTML =
-            '<div style="padding: 8px; text-align: center; color: #93c5fd; font-size: 12px; opacity: 0.6;">No elements</div>';
+        // If list composition changed, rebuild ONCE
+        if (signature !== lastCounterSignature) {
+            container.innerHTML = "";
+
+            if (elementsToShow.length === 0) {
+            container.innerHTML =
+                '<div style="padding: 8px; text-align: center; color: #93c5fd; font-size: 12px; opacity: 0.6;">No elements</div>';
+            lastCounterSignature = signature;
             return;
-        }
+            }
 
-        for (const elementName of elementsToShow) {
-            const raw = counts[elementName] || 0;
-            const displayCount = Number.isInteger(raw) ? raw : raw.toFixed(1);
-            const def = window.ChemistryBIG.getElementDefinition(elementName);
+            for (const sym of elementsToShow) {
+            const def = window.ChemistryBIG.getElementDefinition(sym) || {};
 
+            const row = document.createElement("div");
+            row.className = "counter-add-row";
+            row.dataset.element = sym; // stable key
+
+            // left Add button
+            const addBtn = document.createElement("button");
+            addBtn.type = "button";
+            addBtn.className = "spawn-btn";
+            addBtn.dataset.element = sym;
+
+            // right counter item
             const counterItem = document.createElement("div");
             counterItem.className = "counter-item";
-            counterItem.style.borderLeftColor = def.color;
+            counterItem.style.borderLeftColor = def.color || "#7dd3fc";
             counterItem.style.borderLeftWidth = "3px";
             counterItem.innerHTML = `
-            <span class="element-name">${elementName}</span>
-            <span class="element-count">${displayCount}</span>
+                <span class="element-name">${sym}</span>
+                <span class="element-count">0</span>
             `;
-            counterList.appendChild(counterItem);
+
+            row.appendChild(addBtn);
+            row.appendChild(counterItem);
+            container.appendChild(row);
+            }
+
+            lastCounterSignature = signature;
         }
-        requestSpawnButtonsRefresh();
+
+        // Always update text + disabled state without rebuilding DOM
+        const rows = container.querySelectorAll(".counter-add-row");
+        rows.forEach((row) => {
+            const sym = row.dataset.element;
+            const raw = window.ChemistryBIG.getCounter(sym);
+            const displayCount = formatCount(raw);
+
+            const btn = row.querySelector("button.spawn-btn");
+            const countEl = row.querySelector(".element-count");
+
+            if (countEl) countEl.textContent = displayCount;
+
+            if (btn) {
+            const canAdd = raw >= spawnAmount && !paused;
+            btn.disabled = !canAdd;
+            btn.classList.toggle("unaffordable", !canAdd);
+            btn.innerHTML = `
+                <span class="upgrade-name">Add</span>
+                <span class="upgrade-cost">x${spawnAmount}</span>
+            `;
+            }
+        });
+
+        // keep upgrades in sync
+        refreshUpgradeAffordability?.();
     }
 
     // element counter -----------------------------
@@ -639,6 +727,24 @@
         });
     }
 
+    (function setupCounterAddClicks() {
+        const wrap = document.getElementById("counter-add-list");
+        if (!wrap) return;
+
+        wrap.addEventListener("click", (e) => {
+            const btn = e.target.closest("button.spawn-btn");
+            if (!btn) return;
+
+            e.preventDefault();
+            e.stopPropagation();
+
+            const sym = btn.dataset.element;
+            spawnFromStorage(sym, spawnAmount);
+
+            // Update UI immediately after spending/spawning
+            updateElementCounter();
+        });
+    })();
 
     function renderUpgradesPanel() {
         const list = document.getElementById("upgrades-list");
